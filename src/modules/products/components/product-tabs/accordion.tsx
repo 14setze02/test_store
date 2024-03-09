@@ -45,6 +45,7 @@ const Item: React.FC<AccordionItemProps> = ({
   ...props
 }) => {
   return (
+    /* @ts-expect-error */
     <AccordionPrimitive.Item
       {...props}
       className={clx(
