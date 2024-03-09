@@ -2,10 +2,12 @@
 
 import { Region } from "@medusajs/medusa"
 import { PricedProduct } from "@medusajs/medusa/dist/types/pricing"
-import { Button } from "@medusajs/ui"
+import { Button, Input, Label, Toast } from "@medusajs/ui"
 import { isEqual } from "lodash"
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
+import wilaya from "../assets/wilaya.json";
+import communes from "../assets/communes.json";
 
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { addToCart } from "@modules/cart/actions"
@@ -14,6 +16,7 @@ import OptionSelect from "@modules/products/components/option-select"
 
 import MobileActions from "../mobile-actions"
 import ProductPrice from "../product-price"
+import NativeSelect from "@modules/common/components/native-select"
 
 type ProductActionsProps = {
   product: PricedProduct
@@ -31,6 +34,14 @@ export default function ProductActions({
   product,
   region,
 }: ProductActionsProps) {
+  
+  const [name, setName] = useState<string>('');
+  const [phone, setPhone] = useState<number>(0);
+  const [qte, setQte] = useState<number>(1);
+  const [wilay, setWilay] = useState<string>('1');
+  const [wilaia, setWilaya] = useState<string>('1');
+  const [commune, setCommune] = useState<string>('');
+  const [postal_code, setPostalCode] = useState<string>('');
   const [options, setOptions] = useState<Record<string, string>>({})
   const [isAdding, setIsAdding] = useState(false)
 
@@ -126,6 +137,68 @@ export default function ProductActions({
   return (
     <>
       <div className="flex flex-col gap-y-2" ref={actionsRef}>
+      <Label>الإسم</Label>
+          <Input
+            name="nom"
+            autoComplete="family-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+
+          />
+          <Label>رقم الهاتف</Label>
+          <Input
+            name="phone"
+            autoComplete="phone-number"
+            value={phone}
+            onChange={(e) => {
+              if (e.target.value.length > 1 && !['05', '06', '07'].includes(e.target.value.slice(0, 2))) {
+                Toast({
+                  variant: 'error',
+                  title: "خلل",
+                  description: "يرجى كتابة رقم هاتف صحيح"
+                })
+              }
+              else if (e.target.value?.length > 10) {
+                Toast({
+                  variant: 'error',
+                  title: "خلل",
+                  description: "رقم الهاتف لا يتجاوز 10 أرقام"
+                })
+              }
+              else setPhone(parseInt(e.target.value))
+            }}
+            type="number"
+            required
+          />
+          <Label>الولاية</Label>
+          <NativeSelect placeholder={"الولاية"} defaultValue={''} onChange={(e) => { setWilay(e.target.value); setWilaya(e.target.selectedOptions[0].label) }}  >
+            {wilaya.map(({ id, ar_name }, index) => (
+              <option key={id} value={id}>
+                {ar_name}
+              </option>
+            ))}
+          </NativeSelect>
+          <Label>البلدية</Label>
+          <NativeSelect placeholder={"البلدية"} defaultValue={''} onChange={(e) => { setCommune(e.target.selectedOptions[0].label); setPostalCode(e.target.value) }}  >
+            {communes.filter((val) => val.wilaya_id == wilay).map(({ id, ar_name, post_code }, index) => (
+              <option key={id} value={post_code}>
+                {ar_name}
+              </option>
+            ))}
+          </NativeSelect>
+          <Label>الكمية</Label>
+          <Input
+            name="qte"
+            autoComplete="phone-number"
+            value={qte}
+            onChange={(e) => {
+              setQte(parseInt(e.target.value))
+            }}
+            type="number"
+            required
+          />
+
         <div>
           {product.variants.length > 1 && (
             <div className="flex flex-col gap-y-4">
